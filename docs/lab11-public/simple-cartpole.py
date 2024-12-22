@@ -2,6 +2,7 @@
 Classic cart-pole system implemented by Rich Sutton et al.
 Derived from http://incompleteideas.net/sutton/book/code/pole.c
 """
+
 __copyright__ = "Copyright 2020, Microsoft Corp."
 
 
@@ -127,22 +128,39 @@ def print_state(state, name):
     )
 
 
-def linearize(): # TODO maybe add some parameters to this function
+def linearize(
+    x, x_dot, angle, angle_dot
+):  # TODO maybe add some parameters to this function
     # TODO: implement this function
-    A = np.array( #TODO: fill in the matrix
+    A = np.array(  # TODO: fill in the matrix
         [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [
+                0,
+                0,
+                -POLE_MASS_LENGTH
+                / TOTAL_MASS
+                * TOTAL_MASS
+                * GRAVITY
+                / ((4 / 3) * TOTAL_MASS - POLE_MASS_LENGTH),
+                0,
+            ],
+            [0, 0, 0, 1],
+            [0, 0, TOTAL_MASS * GRAVITY / ((4 / 3) * TOTAL_MASS - POLE_MASS_LENGTH), 0],
         ]
     )
-    B = np.array( #TODO: fill in the matrix
+    B = np.array(  # TODO: fill in the matrix
         [
             [0],
+            [
+                1 / TOTAL_MASS
+                + POLE_MASS_LENGTH
+                / TOTAL_MASS
+                * 1
+                / ((4 / 3) * TOTAL_MASS - POLE_MASS_LENGTH)
+            ],
             [0],
-            [0],
-            [0],
+            [-1 / ((4 / 3) * TOTAL_MASS - POLE_MASS_LENGTH)],
         ]
     )
     return A, B
@@ -164,9 +182,14 @@ def no_force():
 def controlled():
     pole = CartPoleModel(initial_cart_position=-3)
     state = pole.state()
-    A, B = linearize()
-    Q = np.diag([0,0,0,0]) #TODO: fill in the matrix (vector)
-    R = [0] # TODO: fill in the matrix (one value)
+    A, B = linearize(
+        state["cart_position"],
+        state["cart_velocity"],
+        state["pole_angle"],
+        state["pole_angular_velocity"],
+    )
+    Q = np.diag([1, 1, 1, 1])  # TODO: fill in the matrix (vector)
+    R = [1]  # TODO: fill in the matrix (one value)
     K = control.lqr(A, B, Q, R)[0]
     print("K", K)
     for i in range(1300):
