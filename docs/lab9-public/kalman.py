@@ -1,6 +1,7 @@
-import numpy as np
-import cv2
 import datetime
+
+import cv2
+import numpy as np
 
 process_var = 1  # Process noise variance
 measurement_var = 1e4  # Measurement noise variance
@@ -15,7 +16,7 @@ class KalmanFilter:
         # Measurement Matrix
         ## TODO ##
         # Set the measurement matrix H
-        self.H = ...
+        self.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]])
 
         # Process Covariance Matrix
         self.Q = np.eye(4) * process_var
@@ -32,18 +33,21 @@ class KalmanFilter:
     def predict(self, dt):
         ### TODO ###
         # State Transition Matrix
-        A = ...
-        x = ...
-        P = ...
+        dt = dt.total_seconds()
+        A = np.array([[1, 0, dt, 0], [0, 1, 0, dt], [0, 0, 1, 0], [0, 0, 0, 1]])
+        self.x = A @ self.x
+        self.P = A @ self.P @ A.T + self.Q
         ###
 
     def update(self, measurement):
         # Update the state with the new measurement
         ### TODO ###
-        ...
-        x = ...
-        P = ...
-        pass
+        y = measurement - self.H @ self.x
+        S = self.H @ self.P @ self.H.T + self.R
+        K = self.P @ self.H.T @ np.linalg.inv(S)
+
+        self.x = self.x + K @ y
+        self.P = (np.eye(self.H.shape[1]) - K @ self.H) @ self.P
         ### ###
 
 
@@ -67,7 +71,8 @@ class ClickReader:
             new_time = datetime.datetime.now()
             ### TODO ###
             # Predict the next state
-
+            dt = new_time - self.cur_time
+            kf.predict(dt)
             ###
             self.cur_time = new_time
 
@@ -75,7 +80,7 @@ class ClickReader:
 
             ### TODO ###
             # Update the state with the new measurement
-
+            kf.update(np.array([[x], [y]]))
             ###
             print(f"Updated State: {kf.x}")
 
@@ -88,13 +93,15 @@ class ClickReader:
 
             ### TODO ###
             # Predict the next state
+            dt = new_time - self.cur_time
+            kf.predict(dt)
 
             self.cur_time = new_time
 
             ### TODO ###
             # Use the predicted state to draw a circle on the image
-            x = ...
-            y = ...
+            x = kf.x[0]
+            y = kf.x[1]
             cv2.circle(
                 self.img, (int(x), int(y)), 2, (255, 0, 0), -1
             )  # Red color, filled circle
