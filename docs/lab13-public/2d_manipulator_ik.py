@@ -100,20 +100,25 @@ for i in range(N):
 
     # Compute dX
     # dX = X_ref - X
-    dX = # TODO
+    dX = np.array(
+        [
+            x_ref[i] - (np.cos(theta1) + np.cos(theta1 + theta2)),
+            y_ref[i] - (np.sin(theta1) + np.sin(theta1 + theta2)),
+        ]
+    )
     # print(dX)
 
     # Compute dq = Jinv*dX
-    dq = # TODO 
+    dq = Jinv @ dX
     # print(dq)
 
     x_all.append(position_Q[0])
     y_all.append(position_Q[1])
 
     # update theta1 and theta2
-    theta1 # TODO
-    theta2 # TODO 
-    
+    theta1 += dq[0]
+    theta2 += dq[1]
+
     go_to(theta1, theta2)
 
     mujoco.mj_step(model, data)
