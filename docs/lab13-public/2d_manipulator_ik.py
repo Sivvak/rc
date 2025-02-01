@@ -69,6 +69,15 @@ def go_to(expected_theta_1: float, expected_theta_2: float):
         renderer.update_scene(data)
 
 
+def compute_jacobian():
+    return np.array(
+        [
+            [-np.sin(theta1) - np.sin(theta1 + theta2), -np.sin(theta1 + theta2)],
+            [np.cos(theta1) + np.cos(theta1 + theta2), np.cos(theta1 + theta2)],
+        ]
+    )
+
+
 for i in range(N):
     # Compute Jacobian J
 
@@ -91,7 +100,8 @@ for i in range(N):
     mujoco.mj_jac(model, data, jacp, None, position_Q, 2)
 
     # print(jacp)
-    J = jacp[[0, 1], :]
+    # J = jacp[[0, 1], :]
+    J = compute_jacobian()
     # print(J)
 
     # Compute inverse Jacobian Jinv
